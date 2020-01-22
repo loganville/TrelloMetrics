@@ -1,9 +1,16 @@
 const functions = require('firebase-functions');
 
+const moment = require('moment');
 const rp = require("request-promise-native");
+
 const api_key = functions.config().trello.api_key;
 const access_key = functions.config().trello.access_key;
 const board = functions.config().trello.board;
+const list = functions.config().trello.list;
+
+const admin = require('firebase-admin');
+admin.initializeApp(functions.config().firebase);
+let db = admin.firestore();
 
 exports.helloWorld = functions.https.onRequest((request, response) => {
     response.send("Hello from Firebase!");
@@ -31,5 +38,45 @@ exports.getCards = functions.https.onRequest((request, response) => {
         .catch(function (err) {
             response.status(500).send(err);
             return err;
+        });
+});
+
+exports.updateData = functions.pubsub.schedule('every 23 hours').onRun((context) => {
+    const yesterday = moment().subtract(1, 'days');
+
+    const options = {
+        uri: 'https://api.trello.com/1/board/' + board + '/actions',
+        qs: {
+            filter: 'updateCard:idList',
+            member: false,
+            fields: 'data,date',
+            memberCreator: false,
+            key: api_key,
+            token: access_key,
+            since: yesterday.format()
+        },
+        headers: {
+            'User-Agent': 'Request-Promise'
+        },
+        json: true
+    };
+
+    return rp(options)
+        .then(function (actions) {
+            console.log(actions);
+            actions.forEach(action => {
+                if (action.data.listBefore.id === list) {
+                    return db.collection('cards').doc(action.data.card.id).set({
+                        time_in: admin.firestore.Timestamp.fromDate(new Date(action.date)),
+                    }, {merge: true});
+                } else if (action.data.listAfter.id === list) {
+                    return db.collection('cards').doc(action.data.card.id).set({
+                        time_out: admin.firestore.Timestamp.fromDate(new Date(action.date)),
+                    }, {merge: true});
+                }
+            });
+        })
+        .catch(function (err) {
+            throw err;
         });
 });
