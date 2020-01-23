@@ -80,3 +80,33 @@ exports.updateData = functions.pubsub.schedule('every 23 hours').onRun((context)
             throw err;
         });
 });
+
+exports.checkLabel = functions.firestore.document('cards/{cardId}').onWrite((change, context) => {
+    if (change.after.exists) {
+        const options = {
+            uri: 'https://api.trello.com/1/cards/' + context.params.cardId + '/labels',
+            qs: {
+                key: api_key,
+                token: access_key
+            },
+            headers: {
+                'User-Agent': 'Request-Promise'
+            },
+            json: true
+        };
+
+        return rp(options)
+            .then(function (labels) {
+                labels.forEach(label => {
+                    if (label.name === "defect") {
+                        return db.collection('cards').doc(context.params.cardId).set({
+                            defect: true,
+                        }, {merge: true});
+                    }
+                });
+            })
+            .catch(function (err) {
+                throw err;
+            });
+    }
+});
