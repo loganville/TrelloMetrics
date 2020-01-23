@@ -67,11 +67,11 @@ exports.updateData = functions.pubsub.schedule('every 23 hours').onRun((context)
             actions.forEach(action => {
                 if (action.data.listBefore.id === list) {
                     return db.collection('cards').doc(action.data.card.id).set({
-                        time_in: admin.firestore.Timestamp.fromDate(new Date(action.date)),
+                        time_out: admin.firestore.Timestamp.fromDate(new Date(action.date)),
                     }, {merge: true});
                 } else if (action.data.listAfter.id === list) {
                     return db.collection('cards').doc(action.data.card.id).set({
-                        time_out: admin.firestore.Timestamp.fromDate(new Date(action.date)),
+                        time_in: admin.firestore.Timestamp.fromDate(new Date(action.date)),
                     }, {merge: true});
                 }
             });
