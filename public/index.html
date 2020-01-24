@@ -1,61 +1,63 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Welcome to Firebase Hosting</title>
     <script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-firestore.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
-  </head>
-  <body>
+</head>
+<body>
+<div class="chart-container" style="position: relative; height:20vh; width:40vw">
     <canvas id="myChart"></canvas>
-    <p id="load">Firebase SDK Loading&hellip;</p>
-
-    <script>
-      const ctx = document.getElementById('myChart').getContext('2d');
-      const chart = new Chart(ctx, {
-        // The type of chart we want to create
-        type: 'line',
-
-        // The data for our dataset
+</div>
+<script>
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const chart = new Chart(ctx, {
+        type: 'bar',
         data: {
-          labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-          datasets: [{
-            label: 'My First dataset',
-            backgroundColor: 'rgb(255, 99, 132)',
-            borderColor: 'rgb(255, 99, 132)',
-            data: [0, 10, 5, 2, 20, 30, 45]
-          }]
+            datasets: [{
+                label: 'Bar Dataset',
+                data: [10, 20, 30, 40],
+                // this dataset is drawn below
+                order: 1
+            }, {
+                label: 'Line Dataset',
+                data: [10, 10, 10, 10],
+                type: 'line',
+                // this dataset is drawn on top
+                order: 2
+            }],
+            labels: ['January', 'February', 'March', 'April']
         },
-
-        // Configuration options go here
         options: {}
-      });
-    </script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
         // Initialize Cloud Firestore through Firebase
         firebase.initializeApp({
-          apiKey: "AIzaSyBBCH1qhqfQpks9SxZ4ocw7-ORxw5IPl3Y",
-          authDomain: "trellometrics-aa7a1.firebaseapp.com",
-          projectId: "trellometrics-aa7a1",
+            apiKey: "AIzaSyBBCH1qhqfQpks9SxZ4ocw7-ORxw5IPl3Y",
+            authDomain: "trellometrics-aa7a1.firebaseapp.com",
+            projectId: "trellometrics-aa7a1",
         });
 
         const db = firebase.firestore();
         const docRef = db.collection("cards");
 
-        docRef.get().then(function(doc) {
-          if (doc.exists) {
-            console.log("Document data:", doc.data());
-          } else {
-            // doc.data() will be undefined in this case
-            console.log("No such document!");
-          }
-        }).catch(function(error) {
-          console.log("Error getting document:", error);
-        });
-      });
-    </script>
-  </body>
+        db.collection("cards").where("defect", "==", true)
+            .get()
+            .then(function (querySnapshot) {
+                querySnapshot.forEach(function (doc) {
+                    // doc.data() is never undefined for query doc snapshots
+                    console.log(doc.id, " => ", doc.data());
+                });
+            })
+            .catch(function (error) {
+                console.log("Error getting documents: ", error);
+            });
+    });
+</script>
+</body>
 </html>

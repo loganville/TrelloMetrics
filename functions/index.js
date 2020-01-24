@@ -81,6 +81,17 @@ exports.updateData = functions.pubsub.schedule('every 23 hours').onRun((context)
         });
 });
 
+exports.defectRate = functions.https.onRequest((request, response) => {
+    db.collection("cards")
+        .where("defect", "==", true)
+        .where( "time_in", "<", moment().subtract(0, 'weeks'))
+        .where( "time_in", ">", moment().subtract(5, 'weeks'))
+        .get()
+        .then(snap => {
+            response.status(200).send({length: snap.size});
+        });
+});
+
 exports.checkLabel = functions.firestore.document('cards/{cardId}').onWrite((change, context) => {
     if (change.after.exists) {
         const options = {
