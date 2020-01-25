@@ -1,7 +1,7 @@
 # TrelloMetrics
 Track cycle time and defect rate for a trello board
 
-##Assumptions
+## Assumptions
  * Cycle time can be calculated by looking at time spent in one list on one board
  * Cards do not move in and out of the list multiple times
  * An action is defined as a card changing lists. No more than 1,000 actions will occur on the board in one day.
