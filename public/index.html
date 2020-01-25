@@ -7,102 +7,94 @@
     <script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.7.0/firebase-firestore.js"></script>
 
-    <script src="https://code.highcharts.com/stock/highstock.js"></script>
-    <script src="https://code.highcharts.com/stock/modules/data.js"></script>
-    <script src="https://code.highcharts.com/stock/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/stock/modules/export-data.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/7.2.0/highcharts.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/es-us.js"></script>
+
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
 </head>
 <body>
-<div id="container2" style="height: 400px; min-width: 310px"></div>
-<script>
-    Highcharts.chart('container2', {
-        chart: {
-            zoomType: 'xy'
-        },
-        title: {
-            text: 'Metrics'
-        },
-        xAxis: [{
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            crosshair: true
-        }],
-        yAxis: [{ // Primary yAxis
-            labels: {
-                format: '{value} days',
-                style: {
-                    color: Highcharts.getOptions().colors[1]
-                }
-            },
-            title: {
-                text: 'Cycle Time',
-                style: {
-                    color: Highcharts.getOptions().colors[1]
-                }
-            }
-        }, { // Secondary yAxis
-            title: {
-                text: 'Defects',
-                style: {
-                    color: Highcharts.getOptions().colors[0]
-                }
-            },
-            labels: {
-                format: '{value}',
-                style: {
-                    color: Highcharts.getOptions().colors[0]
-                }
-            },
-            opposite: true
-        }],
-        tooltip: {
-            shared: true
-        },
-        legend: {
-            layout: 'vertical',
-            align: 'left',
-            x: 120,
-            verticalAlign: 'top',
-            y: 100,
-            floating: true,
-            backgroundColor:
-                Highcharts.defaultOptions.legend.backgroundColor || // theme
-                'rgba(255,255,255,0.25)'
-        },
-        series: [{
-            name: 'Defects',
-            type: 'column',
-            yAxis: 1,
-            data: [1, 0, 0, 2, 0, 0, 6, 5, 4, 1, 6, 4]
-        }, {
-            name: 'Cycle Time',
-            type: 'spline',
-            data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6],
-            tooltip: {
-                valueSuffix: ' days'
-            }
-        }]
-    });
-</script>
 <div id="container" style="height: 400px; min-width: 310px"></div>
 <script>
-    Highcharts.getJSON('https://trellometrics-aa7a1.firebaseio.com/test.json', function (data) {
-        Highcharts.stockChart('container', {
-            rangeSelector: {
-                selected: 1
+    moment().format();
+    let defects, cycleTime, categories;
+    $.when(
+        $.getJSON('https://us-central1-trellometrics-aa7a1.cloudfunctions.net/defectRate', function(data) {
+            defects = data;
+        }),
+        $.getJSON('https://us-central1-trellometrics-aa7a1.cloudfunctions.net/cycleTime', function(data) {
+            cycleTime = data;
+        }),
+        $.getJSON('https://us-central1-trellometrics-aa7a1.cloudfunctions.net/getCategories', function(data) {
+            categories = data;
+        })
+    ).then(function() {
+        Highcharts.chart('container', {
+            chart: {
+                zoomType: 'xy'
             },
-
             title: {
                 text: 'Metrics'
             },
-
-            series: [{
-                name: 'Cycle Time',
-                data: data,
-                tooltip: {
-                    valueDecimals: 0
+            xAxis: [{
+                categories: categories,
+                crosshair: true
+            }],
+            yAxis: [{ // Primary yAxis
+                labels: {
+                    format: '{value} days',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
+                },
+                title: {
+                    text: 'Cycle Time',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
                 }
-
+            }, { // Secondary yAxis
+                title: {
+                    text: 'Defects',
+                    style: {
+                        color: Highcharts.getOptions().colors[0]
+                    }
+                },
+                labels: {
+                    format: '{value}',
+                    style: {
+                        color: Highcharts.getOptions().colors[0]
+                    }
+                },
+                opposite: true
+            }],
+            tooltip: {
+                shared: true
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'left',
+                x: 120,
+                verticalAlign: 'top',
+                y: 100,
+                floating: true,
+                backgroundColor:
+                    Highcharts.defaultOptions.legend.backgroundColor || // theme
+                    'rgba(255,255,255,0.25)'
+            },
+            series: [{
+                name: 'Defects',
+                type: 'column',
+                yAxis: 1,
+                data: defects
+            }, {
+                name: 'Cycle Time',
+                type: 'spline',
+                data: cycleTime,
+                tooltip: {
+                    valueSuffix: ' days'
+                }
             }]
         });
     });
