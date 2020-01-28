@@ -84,11 +84,12 @@ exports.updateData = functions.pubsub.schedule('every 23 hours').onRun((context)
 
 exports.generateData = functions.https.onRequest((request, response) => {
     let promises = [];
-    for (let count = 0; count < 10; count++) {
-        let random_start_hours = Math.random() * 3378;
-        let random_cycle_time = Math.random() * 440;
-        let time_in = moment().subtract(random_start_hours, 'hours');
+    let current_date = moment().subtract(week_count, 'weeks');
+    while (current_date < moment()) {
+        let random_cycle_time = Math.random() * 72;
+        let time_in = current_date.clone();
         let time_out = time_in.clone().add(random_cycle_time, 'hours');
+        current_date = time_out.clone();
         promises.push(new Promise((resolve) => {
             return db.collection('cards').doc()
                 .set({
