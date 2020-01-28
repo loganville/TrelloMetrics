@@ -7,7 +7,7 @@ const api_key = functions.config().trello.api_key;
 const access_key = functions.config().trello.access_key;
 const board = functions.config().trello.board;
 const list = functions.config().trello.list;
-const week_count = 11;
+const week_count = 20;
 
 const admin = require('firebase-admin');
 admin.initializeApp(functions.config().firebase);
@@ -82,6 +82,28 @@ exports.updateData = functions.pubsub.schedule('every 23 hours').onRun((context)
         });
 });
 
+exports.generateData = functions.https.onRequest((request, response) => {
+    let promises = [];
+    for (let count = 0; count < 10; count++) {
+        let random_start_hours = Math.random() * 3378;
+        let random_cycle_time = Math.random() * 440;
+        let time_in = moment().subtract(random_start_hours, 'hours');
+        let time_out = time_in.clone().add(random_cycle_time, 'hours');
+        promises.push(new Promise((resolve) => {
+            return db.collection('cards').doc()
+                .set({
+                    time_in: time_in,
+                    time_out: time_out,
+                    defect: Math.random() >= 0.95
+                }, {merge: true});
+        }));
+    }
+    Promise.all(promises).then(() => {
+        response.set('Access-Control-Allow-Origin', '*');
+        response.status(200);
+    });
+});
+
 exports.defectRate = functions.https.onRequest((request, response) => {
     let promises = [];
     for (let week = week_count; week >= 0; week--) {
@@ -112,13 +134,17 @@ exports.cycleTime = functions.https.onRequest((request, response) => {
                 .where("time_in", "<", moment().endOf('isoWeek').subtract(week, 'weeks'))
                 .get()
                 .then(cards => {
-                    let days = 0;
-                    cards.forEach((card)=>{
-                        const start = moment(card.data().time_in);
-                        const end = moment(card.data().time_out);
-                        days += end.diff(start, 'days', true);
+                    let hours = 0;
+                    cards.forEach((card) => {
+                        let end = moment();
+                        if (card.get('time_out') != null) {
+                            end = moment(card.data().time_out.toDate());
+                        }
+                        const start = moment(card.data().time_in.toDate());
+                        hours += end.diff(start, 'hours');
                     });
-                    resolve(Number.parseFloat((days/Math.max(cards.size,1)).toFixed(2)));
+                    const cycleTime = Number.parseFloat((hours / 24 / Math.max(cards.size, 1)).toFixed(2));
+                    resolve(cycleTime);
                 });
         }));
     }
