@@ -125,6 +125,26 @@ exports.defectRate = functions.https.onRequest((request, response) => {
     });
 });
 
+exports.cardCount = functions.https.onRequest((request, response) => {
+    let promises = [];
+    for (let week = week_count; week >= 0; week--) {
+        promises.push(new Promise((resolve) => {
+            return db.collection("cards")
+                .where("time_in", ">", moment().startOf('isoWeek').subtract(week, 'weeks'))
+                .where("time_in", "<", moment().endOf('isoWeek').subtract(week, 'weeks'))
+                .get()
+                .then(cards => {
+                    resolve(cards.size);
+                });
+        }));
+    }
+    Promise.all(promises).then(function (values) {
+        response.set('Access-Control-Allow-Origin', '*');
+        response.status(200).send(values);
+        return values;
+    });
+});
+
 exports.cycleTime = functions.https.onRequest((request, response) => {
     let promises = [];
     for (let week = week_count; week >= 0; week--) {
