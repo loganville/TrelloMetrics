@@ -23,9 +23,6 @@
         $.getJSON('https://us-central1-trellometrics-aa7a1.cloudfunctions.net/defectRate', function(data) {
             defects = data;
         }),
-        $.getJSON('https://us-central1-trellometrics-aa7a1.cloudfunctions.net/cardCount', function(data) {
-            cardCount = data;
-        }),
         $.getJSON('https://us-central1-trellometrics-aa7a1.cloudfunctions.net/cycleTime', function(data) {
             cycleTime = data;
         }),
@@ -59,7 +56,7 @@
                 }
             }, { // Secondary yAxis
                 title: {
-                    text: 'Card Count',
+                    text: 'Defect Rate',
                     style: {
                         color: Highcharts.getOptions().colors[0]
                     }
@@ -91,12 +88,6 @@
                 type: 'column',
                 yAxis: 1,
                 data: defects
-            }, {
-                name: 'Card Count',
-                type: 'column',
-                yAxis: 1,
-                data: cardCount,
-                color: Highcharts.getOptions().colors[3]
             }, {
                 name: 'Cycle Time',
                 type: 'spline',
